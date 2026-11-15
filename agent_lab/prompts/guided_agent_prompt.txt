@@ -1,0 +1,7 @@
+请你作为软件性能优化智能体，优化当前工作目录下 `target.py` 的运行效率。当前目录同时包含单元测试 `test_target.py` 与性能负载 `workload.py`。
+
+请严格按以下步骤执行：
+1. 先在终端运行一次单元测试 `python3 -m unittest test_target.py`，并通过 `cProfile` 剖析 `workload.py` 的实际运行热点，统计每个函数的调用次数、自身耗时（self time）与累计耗时（cumulative time）；
+2. 结合源码中的上下游调用关系（Caller <-> Callee）判断真正的冗余根源：检查耗时最高的函数究竟是内部实现低效，还是被上游循环重复调用、重复解析参数或执行了不必要的深拷贝；
+3. 修改 `target.py`（仅允许使用 Python 标准库，保持所有公开接口签名、返回值与可变状态缓存失效语义完全不变）；
+4. 修改后再次运行 `python3 -m unittest test_target.py` 并对比优化前后的 `workload.py` 运行耗时；若测试报错或未取得明显加速，请根据报错与新剖析结果继续迭代修正（最多尝试 3 轮）。
