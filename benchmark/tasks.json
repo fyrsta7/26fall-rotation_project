@@ -1,0 +1,66 @@
+[
+  {
+    "task_id": "task_01_log_router",
+    "title": "日志分级路由规则匹配",
+    "category": "cross_function_hoisting",
+    "entry_function": "route_log_batch",
+    "summary": "批量解析服务器日志并按规则列表分发到告警通道。",
+    "agent_insight": "cProfile 显示叶子函数 match_single_rule 与 re.compile 占据绝大部分耗时，但根因是上游调用方 route_log_batch 在双重循环内反复解析规则文本。"
+  },
+  {
+    "task_id": "task_02_graph_reach",
+    "title": "依赖图传递可达性与扇出统计",
+    "category": "cross_function_memoization",
+    "entry_function": "count_pair_reachability, compute_transitive_fanout",
+    "summary": "在存在阻塞节点的有向依赖图上执行批量点对可达性查询与传递影响统计。",
+    "agent_insight": "批量查询对相同源点重复触发 collect_reachable 遍历；若直接在图对象上永久缓存而不在增删边时失效，将触发可变图边界单元测试失败。"
+  },
+  {
+    "task_id": "task_03_event_dedup",
+    "title": "流式事件保序去重与用户画像聚合",
+    "category": "data_structure_selection",
+    "entry_function": "build_user_summaries",
+    "summary": "过滤黑名单事件、按首次出现顺序去重并聚合目标用户的活跃标签序列。",
+    "agent_insight": "同时存在去重阶段与用户过滤、标签合并三处线性容器查找，需在不破坏首次出现相对顺序的前提下协同替换为哈希结构。"
+  },
+  {
+    "task_id": "task_04_csv_aggregator",
+    "title": "账单宽表明细按月折算汇总",
+    "category": "allocation_and_parsing",
+    "entry_function": "aggregate_monthly_spend",
+    "summary": "过滤已结算订单并按月份与业务类别折算人民币汇总金额。",
+    "agent_insight": "辅助函数 sanitize_record_for_audit 对每条包含嵌套字典的记录执行 copy.deepcopy（即使大部分记录紧接着被状态过滤丢弃），且 strptime 存在高频重复解析；优化日期解析时须保留非法日期抛出 ValueError 的契约。"
+  },
+  {
+    "task_id": "task_05_token_matcher",
+    "title": "多词术语词表语料扫描",
+    "category": "redundant_work_across_calls",
+    "entry_function": "scan_corpus_glossary",
+    "summary": "在多篇文档中按整词边界统计词表内单词与多词短语的出现频次。",
+    "agent_insight": "外层循环对每个术语重复调用 count_term_in_document，导致同一篇长文档被正则分词上百次；将文档分词与术语长度分组提升到外层即可大幅消除冗余。"
+  },
+  {
+    "task_id": "task_06_config_overlay",
+    "title": "多层配置覆盖与占位符递归展开",
+    "category": "stateful_cache_invalidation",
+    "entry_function": "evaluate_request_configs",
+    "summary": "在三层配置字典上解析带占位符嵌套引用的配置项，支持运行时动态覆盖。",
+    "agent_insight": "每次查询都重新合并三层字典并递归展开正则；引入缓存可获得数量级加速，但必须在 set_override / clear_override / update_env 时精确失效缓存并保持环检测异常。"
+  },
+  {
+    "task_id": "task_07_matrix_window",
+    "title": "二维网格滑动窗口均值与标准差检测",
+    "category": "algorithmic_prefix_sum",
+    "entry_function": "detect_anomalous_windows",
+    "summary": "在二维浮点网格上扫描固定尺寸矩形窗口，筛选均值与标准差同时超标的区域。",
+    "agent_insight": "嵌套四重循环对重叠窗口重复求和；使用二维前缀和与平方前缀和可将单窗口统计降至常数时间，但须注意非正方形窗口（win_h != win_w）与浮点误差截断。"
+  },
+  {
+    "task_id": "task_08_json_normalizer",
+    "title": "结构化请求载荷幂等指纹计算",
+    "category": "serialization_hot_path",
+    "entry_function": "compute_payload_digests",
+    "summary": "将嵌套字典与列表规范化序列化后计算 SHA-256 短摘要。",
+    "agent_insight": "递归序列化中存在逐字符字符串拼接、列表逐项累加拼接及字典二次构造；同时需严格保留 bool 与 int 的类型区分以及 -0.0 规范化语义。"
+  }
+]
